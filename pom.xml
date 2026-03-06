@@ -5,6 +5,7 @@
   <groupId>com.nplusnone</groupId>
   <artifactId>n-plus-none</artifactId>
   <version>1.0-SNAPSHOT</version>
+  <packaging>maven-plugin</packaging>
   <name>n-plus-none</name>
   <description>Zero-runtime N+1 detector for Java/Spring applications.</description>
 
@@ -15,6 +16,27 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <version>3.8.1</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>3.6.4</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+      <version>3.8.1</version>
+      <scope>provided</scope>
+    </dependency>
+
     <dependency>
       <groupId>com.github.javaparser</groupId>
       <artifactId>javaparser-symbol-solver-core</artifactId>
@@ -28,4 +50,14 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>3.6.4</version>
+      </plugin>
+    </plugins>
+  </build>
 </project>
