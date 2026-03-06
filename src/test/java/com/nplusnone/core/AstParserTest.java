@@ -12,7 +12,7 @@ class AstParserTest {
 
     private static final String TEST_FILE_PATH = "src/test/resources/dummy/InvoiceService.java";
     private static final String EXPECTED_FILE_NAME = "InvoiceService.java";
-    private static final int EXPECTED_LINE_NUMBER = 9;
+    private static final int EXPECTED_LINE_NUMBER = 10;
 
     @Test
     void shouldDetectForEachLoopInServiceClass() throws Exception {
@@ -27,5 +27,6 @@ class AstParserTest {
         Violation firstViolation = violations.get(0);
         assertEquals(EXPECTED_FILE_NAME, firstViolation.fileName());
         assertEquals(EXPECTED_LINE_NUMBER, firstViolation.lineNumber());
+        assertTrue(firstViolation.message().contains("getLineItems"));
     }
 }
