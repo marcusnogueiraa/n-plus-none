@@ -1,6 +1,7 @@
 package com.nplusnone.core;
 
 import com.nplusnone.model.Violation;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -10,24 +11,33 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AstParserTest {
 
-    private static final String TEST_FILE_PATH = "src/test/resources/dummy/InvoiceService.java";
-    private static final String EXPECTED_FILE_NAME = "InvoiceService.java";
-    private static final int EXPECTED_LINE_NUMBER = 10;
+    private AstParser parser;
+
+    @BeforeEach
+    void setUp() {
+        // Initializes the parser with the SymbolSolver pointing to the test folder
+        parser = new AstParser(List.of("src/test/resources"));
+    }
 
     @Test
-    void shouldDetectForEachLoopInServiceClass() throws Exception {
-        File testFile = new File(TEST_FILE_PATH);
-        
-        AstParser parser = new AstParser(List.of("src/test/resources"));
+    void shouldCorrectlyDifferentiateTrueAndFalsePositives() throws Exception {
+        File testFile = new File("src/test/resources/dummy/ComprehensiveService.java");
 
         List<Violation> violations = parser.analyzeFile(testFile);
 
-        assertFalse(violations.isEmpty(), "The tool should have found the loop.");
-        assertEquals(1, violations.size(), "You should find exactly 1 violation.");
-        
-        Violation firstViolation = violations.get(0);
-        assertEquals(EXPECTED_FILE_NAME, firstViolation.fileName());
-        assertEquals(EXPECTED_LINE_NUMBER, firstViolation.lineNumber());
-        assertTrue(firstViolation.message().contains("getLineItems"));
+        // The service has 4 loops, but only 2 should be caught!
+        assertEquals(2, violations.size(), "The analyzer should have found exactly 2 N+1 violations (ignoring DTOs and basic types).");
+
+        // Checks the first violation: Collection return
+        Violation collectionViolation = violations.get(0);
+        assertEquals("ComprehensiveService.java", collectionViolation.fileName());
+        assertEquals(9, collectionViolation.lineNumber(), "Should have caught line 9 (getLineItems)");
+        assertTrue(collectionViolation.message().contains("getLineItems"), "The message must cite the getLineItems method");
+
+        // Checks the second violation: Entity return
+        Violation entityViolation = violations.get(1);
+        assertEquals("ComprehensiveService.java", entityViolation.fileName());
+        assertEquals(15, entityViolation.lineNumber(), "Should have caught line 15 (getCustomer)");
+        assertTrue(entityViolation.message().contains("getCustomer"), "The message must cite the getCustomer method");
     }
 }
