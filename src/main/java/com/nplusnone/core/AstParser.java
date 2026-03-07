@@ -55,17 +55,40 @@ public class AstParser {
                     
                     methodCall.getScope().ifPresent(scope -> {
                         try {
-                            ResolvedType resolvedType = scope.calculateResolvedType();
+                            ResolvedType scopeType = scope.calculateResolvedType();
                             
-                            if (resolvedType.isReferenceType()) {
-                                resolvedType.asReferenceType().getTypeDeclaration().ifPresent(typeDecl -> {
+                            if (scopeType.isReferenceType()) {
+                                scopeType.asReferenceType().getTypeDeclaration().ifPresent(typeDecl -> {
                                     
                                     Optional<ClassOrInterfaceDeclaration> astClass = typeDecl.toAst(ClassOrInterfaceDeclaration.class);
                                     
                                     if (astClass.isPresent() && isEntity(astClass.get())) {
-                                        int line = methodCall.getRange().map(r -> r.begin.line).orElse(-1);
-                                        String message = String.format("N+1 detected on Entity! Call '%s' inside loop.", methodCall.toString());
-                                        violations.add(new Violation(file.getName(), line, message));
+                                        
+                                        ResolvedType returnType = methodCall.resolve().getReturnType();
+                                        
+                                        if (returnType.isReferenceType()) {
+                                            String qualifiedName = returnType.asReferenceType().getQualifiedName();
+                                            boolean isCollection = qualifiedName.equals("java.util.List") || 
+                                                                   qualifiedName.equals("java.util.Set") || 
+                                                                   qualifiedName.equals("java.util.Collection");
+                                            
+                                            boolean isReturnEntity = false;
+                                            if (!isCollection) {
+                                                try {
+                                                    Optional<ClassOrInterfaceDeclaration> returnAstClass = returnType.asReferenceType().getTypeDeclaration().flatMap(decl -> decl.toAst(ClassOrInterfaceDeclaration.class));
+                                                    if (returnAstClass.isPresent() && isEntity(returnAstClass.get())) {
+                                                        isReturnEntity = true;
+                                                    }
+                                                } catch (Exception e) {
+                                                }
+                                            }
+
+                                            if (isCollection || isReturnEntity) {
+                                                int line = methodCall.getRange().map(r -> r.begin.line).orElse(-1);
+                                                String message = String.format("N+1 detected on Entity! Call '%s' returning a relationship inside loop.", methodCall.toString());
+                                                violations.add(new Violation(file.getName(), line, message));
+                                            }
+                                        }
                                     }
                                 });
                             }
