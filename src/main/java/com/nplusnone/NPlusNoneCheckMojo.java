@@ -30,10 +30,10 @@ public class NPlusNoneCheckMojo extends AbstractMojo {
         getLog().info("Starting n-plus-none static analysis...");
 
         List<Violation> allViolations = new ArrayList<>();
-        AstParser parser = new AstParser();
         AtomicInteger filesScanned = new AtomicInteger(0);
 
         List<String> sourceRoots = project.getCompileSourceRoots();
+        AstParser parser = new AstParser(sourceRoots);
 
         for (String sourceRoot : sourceRoots) {
             Path rootPath = Paths.get(sourceRoot);
